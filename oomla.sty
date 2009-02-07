@@ -1,0 +1,26 @@
+%%%%%
+%%
+%% oomla.sty -- example oobib style file modeled after the MLA bibliography
+%%                 style
+%%%%%
+
+\RequirePackage{oobib}
+
+
+%% \@pform{pages}
+%%
+%% Formats a parenthetical citation in the context of a source
+\renewcommand\@pform[1]{%
+  (\nolinebreak\@firstetal{\MYauthors}%
+  \ifnotempty{#1}{, #1}%
+  \nolinebreak)}
+%% \@tform{pages}
+%%
+%% Formats an in-text citation in the context of a source
+\renewcommand\@tform[1]{%
+  \@firstetal{\MYauthors}%
+  \ifthenelse{\equal{#1}{}}{}{%
+    \ (\nolinebreak#1\nolinebreak)}}
+
+\renewcommand\@bibname{Works Cited}
+

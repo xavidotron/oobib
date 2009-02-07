@@ -1,0 +1,82 @@
+\documentclass{article}
+
+\usepackage[biborder]{oonumbib}
+
+\NEW{Book}{\cRainbow}{
+  \s\MYauthors{\name{Bob Jones}%--figure out how to ignore this space???
+               \name{Robert Frost}}
+  \s\MYtitle  {Life}
+  \s\MYyear   {2002}
+  \s\MYpublisher{Addison-Welsey}
+  \s\MYcity   {New York}
+  }
+
+\NEW{Book}{\cNull}{
+  \s\MYauthors{\name{Rob Wash}}
+  \s\MYtitle  {Not Cited, so not in the Bibliography}
+  }
+
+\NEW{Article}{\cFish}{
+  \s\MYauthors{\name{Fish Abbot}}
+  \s\MYtitle  {Not Fishy}
+  \s\MYjournal{Stupidity Weekly}
+  }
+
+\NEW{Article}{\cPutting}{
+  \s\MYauthors{\name{{the Society for Putting Things on Top of Other Things}}}
+  \s\MYtitle  {Things}
+  \s\MYjournal{Python Weekly}
+  }
+
+\NEW{Name}{\nName}{
+  \s\MYname{Rufus Wainwright}
+  }
+
+\begin{document}
+
+\noindent
+\forfirstmostlastonenone{Source}{1}{2}{3}{4}{\emph{5}}{} = 5\\
+\forfirstmostlastonenone{Source}{1}{2}{3}{\emph{4}}{5}{\cRainbow{}} = 4\\
+\forfirstmostlastonenone{Source}{1}{2}{\emph{3}}{4}{5}{\cRainbow{}\cNull{}} = 13\\
+\forfirstmostlastonenone{Source}{\emph{1}}{\emph{2}}{3}{4}{5}{\cRainbow{}\cNull{}\cFish{}} = 123
+
+\forfirstmostlastonenone{Source}{1\MYtitle}{2\MYtitle}{3\MYtitle}{4\MYtitle}{5\MYtitle}{\cRainbow{}\cNull{}\cFish{}}
+
+\forfirstmostlastonenone{Source}{1\MYtitle}{2\MYtitle}{3\MYtitle}{4\MYtitle}{5\MYttile}{\cRainbow{}}
+
+\forfirstmostlastonenone{Book}{\relax\MYtitle}{2\MYtitle}{3\MYtitle}{4\MYtitle}{5\MYttile}{\cRainbow{}}
+\forfirstmostlastonenone{Book}{\MYtitle}{2\MYtitle}{3\MYtitle}{4\MYtitle}{5\MYttile}{\cRainbow{}}
+
+z\forfirstmostone{Name}{\parselast\ et.\ al.}{}{\parselast}{\nName{}}\\
+z\forfirstmostone{Name}{\parselast\ et.\ al.}{}{\parselast}{\name{Rob Jones}}\\
+z\forfirstmostone{Name}{\parselast\ et.\ al.}{}{\parselast}{\name{Rob Jones}\name{Joanie Miller}}
+
+z\nName{\parselast}\\
+\makeatletter
+z\@firstetal{\nName{}}\\
+z\@firstetal{\name{Rob Jones}\name{Joanie Miller}}\\
+z\@firstetal{\cRainbow{\MYauthors{}}}\\
+\makeatother
+z\cPutting{\citet{}}
+
+\cRainbow{\citet[pg.\ 42]} wrote a book.~\cFish{}\\
+\cRainbow{\citet} wrote a book.~\cFish{\citep[pg. 42]}\\
+
+\name{Bob Jones}\\
+\ifnotempty{Fish}{Fish isn't empty.}\\
+\ifnotempty{\name{Bob Jones}}{BJ isn't empty.}\\
+\ifnotempty{}{This should't print.}
+\cRainbow{\MYauthors}
+
+\cPutting{\Citet{} is used at the start of a sentence.~\Citep[pg. 42]}
+
+\makeatletter
+\def\foo{\@Listnamesinvertfirst{\MYauthors}}
+\cRainbow{\foo}
+
+\@capitalize{fish}
+\makeatother
+
+\bibliography{}
+
+\end{document}

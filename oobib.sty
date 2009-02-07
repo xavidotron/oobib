@@ -1,0 +1,409 @@
+%%%%%
+%%
+%% oobib.sty -- object-oriented alternative to bibtex
+%%
+%%%%%
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{oobib}[2007/10/06 v1.0a Object-Oriented Bibliography System]
+\RequirePackage{datatypes}
+\RequirePackage{datamacros}
+\RequirePackage{parsename}
+\RequirePackage{ifthen}
+\RequirePackage{url}
+
+%%%%%
+% Options
+
+% listuncited: include all sources in the bibliography, even if they aren't
+%              cited anywhere
+\DeclareOption{listuncited}{\@citedtrue}
+
+% tight: don't skip lines between bibliography entries
+\DeclareOption{tight}{%
+  \expandafter\gdef\expandafter\@biblistmods\expandafter{%
+    \@biblistmods\itemsep0pt}%
+}
+
+%%%%%
+% Public interface
+%
+% These commands make up the public interface of oobib.
+%
+% "Used in the context of a source" means used like \sSource{\citep}.
+% You can put other stuff in the context of a source, for example,
+% the following should be valid:
+% \sBook{The book \emph{\MYtitle}, by \citet, was very useful.
+
+%% \sSource{\citep[<pages>]}
+%% \sSource{\Citep[<pages>]}
+%%
+%% Used in the context of a source, produces a parenthetical 
+%% citation, like "(Author, Year, Pages)" or "[12]"
+%% The \Citep version forces the first letter of the result to be capitalized.
+%% Includes an unbreakable space, so don't put a space between the last word and it.
+\newcommand\citep[1][]{%
+  \edef\sftemp{\the\spacefactor}%
+  ~%
+  \@flagcited%
+    \@bibstuff{}% -! is there a way to get rid of this @bibstuff junk?
+  \ME{\@pform{#1}}%
+  \spacefactor=\sftemp}
+\newcommand\Citep[1][]{%
+  \let\@firstetal=\@Firstetal%
+  \citep[#1]}
+
+%% \sSource{\citet[<pages>]}
+%% \sSource{\Citet[<pages>]}
+%%
+%% Used in the context of a source, produces an in-text citation, 
+%% like "Author (Year, Pages)" or "Author [12]"
+%% The \Citet version forces the first letter of the result to be capitalized.
+\newcommand\citet[1][]{%
+  \@flagcited%
+    \@bibstuff{}% -! is there a way to get rid of this @bibstuff junk?
+  \ME{\@tform{#1}}\@}
+\newcommand\Citet[1][]{%
+  \let\@firstetal=\@Firstetal%
+  \citet[#1]}
+
+%%%%%
+%% \bibliography{}
+%%
+%% makes a bibligraphy of only the cited works, according to
+%% the various bibmappings
+\renewcommand\bibliography{
+  \section*{\@bibname{}}
+
+  % Catch the bibstuff
+  \@bibstuff{}
+
+  % Compute sort orders for sources without an explicit sort order
+  \EVERY{Source}{
+    \ifnotemptyelse{\MYsortorder}{\ADD{\def\@sortorder{\MYsortorder}}}{
+      % Basically \Listnamesinvertfirst, but with \append
+      \gdef\oobib@sotmp{}
+      \forfirstmostlast{Name}{\xdef\oobib@sotmp{\oobib@sotmp\@lastfirst}}%
+                       {\xdef\oobib@sotmp{\oobib@sotmp, \MYname}}%
+                       {\xdef\oobib@sotmp{\oobib@sotmp\ and \MYname}}%
+                       {\MYauthors}%
+      \xdef\oobib@sotmp{\oobib@sotmp \MYtitle}%
+      \edef\go{%
+        \noexpand\ADD{%
+          \noexpand\edef\noexpand\@sortorder{\oobib@sotmp}}}%
+      \go
+    }
+    \ADD{\@makeallchars\@sortorder}% -! should handle spaces better...
+    % Default for undefined MYindexes if we're printing uncited sources
+    \ifdefined\MYindex\else
+      \edef\go{%
+        \noexpand\ADD{%
+          \noexpand\edef\noexpand\MYindex{\the\@nextindex}}}%
+      \go
+      \global\advance\@nextindex by 1\relax
+    \fi
+  }
+  \begin{@biblist}
+  %\EVERY{Source}{\ifx\@cited\@true\item\label{@oobib:\MYindex}\MYbibmap{}\fi}
+  \SORT{Source}{alpha<}{\@sortorder}{\EVERY{Source}{}}%
+       {\if@cited\item\label{@oobib:\MYindex}\MYbibmap{}\fi}
+  \end{@biblist}
+  }
+
+%%%%%
+%% Datatype definitions
+%%
+%% You can create more subtypes of Source in your bibliography style, if
+%% you want
+
+%%%%
+%% Name type -- represents a name
+\DECLARETYPE{Name}
+\PRESETS{Name}{
+  \F\MYname
+  }
+\POSTSETS{Name}{
+  \parsename{\MYname{}}
+  }
+\MAP{Name}{\MYname{}}
+
+%% \name{<name>}
+%%
+%% creates a name inline, for people that show up only once.
+\newinstance{Name}{\name[1]}{%
+  \s\MYname{#1}}
+
+%%%%%
+%% Source type -- parent of all source types
+%%
+%% Don't instantiate directly; instead, instantiate a subclass.
+\DECLARETYPE{Source}
+\PRESETS{Source}{
+  \FD\MYauthors  {}
+  \FD\MYtitle    {}
+  \FD\MYmonth    {}
+  \FD\MYyear     {}
+  %% Bibliography mapping -- overridden for various subclasses in the styles
+  \FD\MYbibmap{I don't know how to handle \MYTYPESTRING{} ``\MYtitle''.}
+  %% Sort order: we're alphabetized according to this, if set. Must be >1 letter
+  \FD\MYsortorder{}
+  %% Internal toggles
+  \def\@flagcited{%
+    % Catch the bibstuff
+    \@bibstuff{}%
+    \ME{\if@cited\else%
+      \edef\idx{\the\@nextindex}%
+      % This source is the \MYindex{}th source cited in the document
+      \xdef\@bibstuff{\expandafter\unexpanded\expandafter{\@bibstuff}%
+        \expandafter\noexpand\ME{\noexpand\ADD{\noexpand\def\noexpand\MYindex{\idx}%
+                      \noexpand\@citedtrue}}}%
+      \global\advance\@nextindex by 1%
+    \fi}%
+    }
+  }
+
+%% Book type -- for whole books
+\DECLARESUBTYPE{Book}{Source}
+\PRESETS{Book}{
+  \FD\MYcity     {}
+  \FD\MYpublisher{}
+  }
+
+%% Chapter -- for sections of books
+\DECLARESUBTYPE{Chapter}{Book}
+\PRESETS{Chapter}{
+  \FD\MYbook     {}
+  \FD\MYeditors  {}
+  \FD\MYpages    {}
+  }
+
+%% Article -- for journal articles
+\DECLARESUBTYPE{Article}{Source}
+\PRESETS{Article}{
+  \FD\MYjournal  {}
+  \FD\MYvolume   {}
+  \FD\MYnumber   {}
+  \FD\MYissue    {}
+  \FD\MYpages    {}
+  }
+
+%% WebPage -- for web pages
+\DECLARESUBTYPE{WebPage}{Source}
+\PRESETS{WebPage}{
+  \FD\MYurl      {}
+  }
+
+%% End datatype definitions
+%%%%%
+
+%%%%%
+%% Style area
+%%
+%% These are commands that would be redefined in alternate styles
+%%
+
+%% \@pform{pages}
+%%
+%% Formats a parenthetical citation in the context of a source
+\newcommand\@pform[1]{%
+  (\nolinebreak\ifnotemptyelse{\MYauthors}{\@firstetal{\MYauthors}}{``\MYtitle''}%
+  \ifnotempty{\MYyear}{, \MYyear}%
+  \ifnotempty{#1}{, #1}%
+  \nolinebreak)}
+%% \@tform{pages}
+%%
+%% Formats an in-text citation in the context of a source
+\newcommand\@tform[1]{%
+  \@firstetal{\MYauthors}%
+  \ifthenelse{\equal{\MYyear}{}\AND\equal{#1}{}}{}{%
+    \ (\nolinebreak\MYyear%
+    \ifthenelse{\equal{\MYyear}{}\OR\equal{#1}{}}{}{, }%
+    #1\nolinebreak)}}
+
+%% Specifies the textual title for the bibliography
+\newcommand\@bibname{Bibliography}
+
+%% Specifies a tag to go before each bibliography entry
+\newcommand\@fronttag{}
+
+% These mappings are what gets put in the bibliography
+\PRESETS{Book}{%
+  \sd\MYbibmap{%
+    \@normalfront[\emph]%
+    \ifnotempty{\MYpublisher}{%
+      \ifnotempty{\MYcity}{  \MYcity:} %
+      \MYpublisher\ifnotemptyelse{\MYyear}{,}{\@.}%
+    }%
+    \ifnotempty{\MYyear}{ \@datedot}%
+    }
+  }
+\PRESETS{Chapter}{%
+  \sd\MYbibmap{%
+    \@normalfront%
+    \ifnotempty{\MYbook}{  \emph{\MYbook{}}\@.}%
+    \ifnotempty{\MYeditors}{ Ed.\ \@listnames{\MYeditors{}}\@.}%
+    \ifnotempty{\MYpublisher}{%
+      \ifnotempty{\MYcity}{  \MYcity{}:} %
+      \MYpublisher{}\ifnotemptyelse{\MYyear{}}{,}{\@.}%
+    }%
+    \ifnotempty{\MYyear}{ \@datedot}%
+    \ifnotempty{\MYpages}{ pp.\ \MYpages{}\@.}%
+    }
+  }
+\PRESETS{Article}{%
+  \sd\MYbibmap{%
+    \@normalfront%
+    \ifnotempty{\MYjournal}{  \emph{\MYjournal}\@.}%
+    \ifnotempty{\MYvolume\MYnumber\MYissue\MYyear}{%
+    \ifnotempty{\MYvolume}{ Volume \MYvolume%
+      \ifnotempty{\MYnumber\MYissue}{,}}%
+    \ifnotempty{\MYnumber}{ Number \MYnumber
+      \ifnotempty{\MYissue}{,}}%
+    \ifnotempty{\MYissue}{ Issue \MYissue}%
+    \@datedot%
+    }%
+    \ifnotempty{\MYpages}{ pp.\ \MYpages{}\@.}%
+    }
+  }
+\PRESETS{WebPage}{%
+  \sd\MYbibmap{%
+    \@normalfront%
+    \ifnotempty{\MYurl}{ \expandafter\url\expandafter{\MYurl}}%
+    \@datedot%
+    }
+  }
+
+% Modifications to list parameters; note that options like tight append to this
+\def\@biblistmods{}
+
+% Helper
+\def\@quote#1{``#1''}
+
+% Stuff for all normal sources at the beginning
+\newcommand{\@normalfront}[1][\@quote]{%
+  \@fronttag%
+  \@Listnamesinvertfirstdot{\MYauthors}%
+  \ifnotempty{\MYtitle}{  #1{\MYtitle}\@.}%
+}
+
+% For dates at the end
+\newcommand{\@datedot}{%
+  \ifnotempty{\MYyear}{ (%
+    \ifnotempty{\MYmonth}{\MYmonth, }%
+    \MYyear)}%
+  \@.%
+} 
+
+%%%%%
+%% Internal stuff
+%%
+%% This stuff might get used by custom bibliography styles, but shouldn't
+%% be redefined
+
+\newif\if@cited
+
+\newcounter{@bibctr}
+% Based on the description environment in the article class
+\newenvironment{@biblist}
+               {\list{}{\@biblistmods\usecounter{@bibctr}%
+                        \labelwidth\z@ \itemindent-\leftmargin%
+                        % We don't support labels with arguments
+                        \let\makelabel\relax}}
+               {\endlist}
+
+% Stuff that gets saved to be expanded in the bibliography, to allow us to
+% catch citations and such in groups
+\def\@bibstuff{}
+
+% Works in theory but not in practice
+\def\@stripnonletters#1{%
+  \edef\fun{\noexpand\@snl#1\noexpand\e}%
+  \fun{}}
+\def\@snl#1#2\e{%
+  \ifcat a#1#1\fi%
+  \def\tmp{#2}%
+  \ifx\tmp\empty\else\@snl#2\e\fi}
+
+% More magical formatting
+
+%% Capitalization magic, based on code from the natbib package
+%% It is likely to break on complicated arguments
+%\def\NAT@rest{} % -- this is probably bad but stops an error?
+\newcommand\@ecapitalize[1]{%
+  \edef\fun{\noexpand\@capitalize{#1}}%
+  \fun{}}
+\newcommand\@capitalize[1]{{\let\protect\@unexpandable@protect\let~\relax
+  \expandafter\NAT@deftemp#1;}\expandafter\NAT@UP\NAT@temp\NAT@rest}
+\def\NAT@deftemp#1#2;{\xdef\NAT@temp{#1}\xdef\NAT@rest{#2}}
+\newcommand\NAT@UP[1]{\let\@tempa\NAT@UP\ifcat a#1\MakeUppercase{#1}%
+  \let\@tempa\relax\else#1\fi\@tempa}
+
+%% \@firstetal
+%% \@Firstetal
+\newcommand\@firstetal[1]{%
+  \forfirstmostone{Name}{\parselast\ et.\ al.}{}{\parselast}{#1}%
+  }
+\newcommand\@Firstetal[1]{%
+  \forfirstmostone{Name}{\@ecapitalize{\parselast}\ et.\ al.}{}{\@ecapitalize{\parselast}}{#1}%
+  }
+
+%% \@firsthalf
+%%
+%% Returns Dr. George Marley from Dr. George Marley Jones Jr.
+\newcommand\@firsthalf{%
+  \ifx\parseprefix\empty\else\parseprefix\ \fi%
+  \ifx\parsefirst\empty\else\parsefirst\fi%
+  \ifx\parserest\empty\else\ \parserest\fi}
+
+%% \@lasthalf
+%%
+%% Returns Jones, Jr. from Dr. George Marley Jones, Jr.
+\newcommand\@lasthalf{%
+  \parselast\parsecomma%
+  \ifx\parsesuffix\empty\else\ \parsesuffix\fi}
+
+%% \@lastfirst
+%% \@Lastfirst
+%%
+%% Formats a name like Jones Jr., Dr. George Marley
+%% If the first or last bits are empty, drops the comma
+%% \@Lastfirst makes sure the result starts with a capital.
+\newcommand\@lastfirst{%
+  \ifx\parsefirst\empty%
+    \@lasthalf%
+  \else\ifx\parselast\empty%
+    \@firsthalf%
+  \else%
+    \@lasthalf,\ \@firsthalf%
+  \fi\fi%
+  }
+\newcommand\@Lastfirst{%
+  \@ecapitalize{\@lastfirst}%
+  }
+% ?xavid: why are these nolinebreaks necessary?
+\newcommand\@Listnamesinvertfirstdot[1]{%
+  \forfirstmostlastone{Name}{\@Lastfirst}{, \MYname{}\nolinebreak}{\ and \MYname{}\@.}
+      {\@Lastfirst\edef\stuff{\noexpand\in@{.<<}{\@lastfirst<<}}%
+       \stuff% Make us get wide spacing if applicable, even if we were a Q.
+       \ifin@\spacefactor=\sfcode`.\else\@.\fi}{#1}%
+  }
+\newcommand\@listnames[1]{%
+  \forfirstmostlast{Name}{\MYname{}}{, \MYname{}\nolinebreak}{\ and \MYname{}}{#1}%
+  }
+\newcommand\@Listnames[1]{%
+  \forfirstmostlast{Name}{\@ecapitalize{\MYname}}{, \MYname{}\nolinebreak}{\ and \MYname{}}{#1}%
+  }
+
+%% Counter for citation indices
+\newcount\@nextindex
+\@nextindex=1
+
+\newlength{\@argl} % -? Hackish but works?  better way to compare protected things?
+\newcommand\ifnotemptyelse[3]{%
+  \settowidth{\@argl}{\protect#1}%
+  \ifthenelse{\lengthtest{\the\@argl=0pt}}{#3}{#2}}
+\newcommand\ifempty[2]{\ifnotemptyelse{#1}{}{#2}}
+\newcommand\ifnotempty[2]{\ifnotemptyelse{#1}{#2}{}}
+
+% Options override other stuff
+\ProcessOptions

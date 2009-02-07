@@ -1,0 +1,265 @@
+%%%%%
+%%
+%% ooindex.sty -- object-oriented alternative to makeindex
+%%
+%%%%%
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{ooindex}[2007/10/06 v1.0a Object-Oriented Index System]
+\RequirePackage{datatypes}
+\RequirePackage{datamacros}
+\RequirePackage{ifthen}
+\RequirePackage{keyval}
+
+%%%%%
+% Public interface
+%
+% These commands make up the public interface of ooindex.
+
+%% \index{word}
+%% \index[<parameters>]{word}
+%%
+%% Adds the current page as an index entry for "word".
+%% parameters can be one or more of the following, separated by commas:
+%%   index=<which>: Put the entry in the index "which" instead
+%%                  of the main index. 'index' can be abbreviated 'i'
+%%   (: open a page range from here until the next ) for this word
+%%   ): close a page range for this word
+%%   style=<macro>: set the style for this reference, where macro is something
+%%                   like textbf or emph with one argument
+%%   bf: short for style=textbf
+%%   it: short for style=textit
+%%   parent=<word>: add this entry as a child of the specified word in the index
+%%                  'parent' can be abbreviated 'p'
+\renewcommand\index[2][]{%
+  \edef\ind{\the\@nextunique}%
+  \label{@ooindex:\ind}%
+  % We don't actually define objects here, because we might be in a group
+  % Expand things now, though
+  \edef\run{\noexpand\@addref{\ind}{#1}{#2}}%
+  \run{}%
+  \global\advance \@nextunique by 1\relax%
+  }
+
+%% \newindex{which}{title}
+%%
+%% Creates an index with the specified identifier and title.
+%% Makes 'which' a shortcut for index=which; i.e., after using
+%% \newindex{fish}{Fish}, you can say:
+%% \index[fish]{trout}
+%% instead of:
+%% \index[index=fish]{trout}
+\newcommand\newindex[2]{%
+  \indextitle[#1]{#2}%
+  \define@key{ooindex}{#1}[]{\def\which{#1}}}
+
+%% \indextitle{title}
+%% \indextitle[which]{title}
+%%
+%% Sets the title for the specified index to title.
+\newcommand\indextitle[2][]{%
+  \expandafter\gdef\csname @indname:#1\endcsname{#2}}
+
+%% \printindex
+%% \printindex[which]
+%%
+%% Prints the index here according to the index style.  If
+%% which is specified, print that index instead of the default
+%% one
+\newcommand\printindex[1][]{%
+  \begingroup%
+  \ifdefined\chapter%
+    \chapter*{\ifcsname @indname:#1\endcsname%
+                \csname @indname:#1\endcsname%
+              \else%
+                \@indname%
+              \fi}%
+  \else%
+    \clearpage\section*{\@indname}%
+  \fi%
+  
+  \def\doref##1##2##3{
+    \def\which{}%
+    \def\mode{}%
+    \def\parent{}%
+    \def\style{relax}%
+    \setkeys{ooindex}{##2}%
+    \ifthenelse{\equal{#1}{\which}}{\dorefh{##1}{##3}}{}}
+  \def\dorefh##1##2{
+    \let\ea=\expandafter%
+    \let\ne=\noexpand%
+    % Define the control sequence in a block so its definition to \relax doesn't
+    % stick
+    {\xdef\ooindex@im{\expandafter\noexpand\csname ooindex@ie:\parent:##2\endcsname}}%
+    \ea\ifdefined\ooindex@im%
+    \else%
+    \ea\@makeindexentry\ea{\ooindex@im}<##2>
+    \fi%
+    \ooindex@im{
+      \ifthenelse{\equal{\mode}{open}}
+               {\edef\dostuff{\ne\ADD{\ne\def\ne\@open{##1}
+                                      \ne\def\ne\@ostyle{\style}}}}
+      {\ifthenelse{\equal{\mode}{close}}
+                 {\edef\dostuff{\ne\ADD{
+                                     \ne\append\ne\MYrefs{\ne\@ocref{\@open}%
+                                                             {##1}{\style}%
+                                       \ea\unexpanded\ea{\@afterclose}%
+                                     }
+                                   \ne\def\ne\@open{}
+                                   \ne\def\ne\@afterclose{}}}}
+                 {\edef\dostuff{\ne\ADD{\ne\ifthenelse{\ne\equal{\@open}{}}
+                                        {\ne\append\ne\MYrefs{\ne\@ref{##1}
+                                                                      {\style}}}
+                                        {\ifx\@ostyle\style
+                                         \else
+                                           \ne\def\ne\@afterclose{\ne\@ref{##1}
+                                                                       {\style}}
+                                         \fi}}}}}
+      \dostuff}%
+    % Handle parent
+    \ifthenelse{\equal{\parent}{}}{}{
+      {\xdef\ooindex@pm{\expandafter\noexpand\csname ooindex@ie::\parent\endcsname}}
+      \ea\ifdefined\ooindex@pm%
+      \else%
+      \edef\go{\ne\@makeindexentry{\ea\ne\ooindex@pm}<\parent>}%
+      \go{}
+      \fi%
+      \ooindex@pm{\edef\go{\ne\ADD{\ne\append\ne\MYchildren{\ea\unexpanded\ea{\ooindex@im{}}}}}%
+                  \go
+                  \ADD{\let\@haschildren\@true}}%
+      \ooindex@im{\ADD{\let\@toplevel\@false}}
+      }
+    }
+  \@storedrefs
+  \gdef\@lastcat{}
+  \begin{@indlist}%
+  \SORT{IndexEntry}{alpha<}{\MYword}{\EVERY{IndexEntry}{}}{
+  \ifx\@toplevel\@true%
+    \ifthenelse{\equal{\@lastcat}{}\OR\equal{\@lastcat}{\MYcategory}}
+      {}
+      {\item}% Blank line between categories
+    \item[\MYword] \@formatrefs{\MYrefs}
+    % Put something here or else entries with no refs go bonk
+    ~
+    \ifx\@haschildren\@true
+      \begin{@indlist}
+      \SORT{IndexEntry}{alpha<}{\MYword}{\MYchildren}{
+        \item[\MYword] \@formatrefs{\MYrefs}
+      }
+      \end{@indlist}
+    \fi
+    \xdef\@lastcat{\MYcategory}
+  \fi
+  }%
+  \end{@indlist}%
+  \endgroup%
+  }
+\define@key{ooindex}{index}{\edef\which{#1}}
+\define@key{ooindex}    {i}{\edef\which{#1}}
+\define@key{ooindex}{(}[]{\def\mode{open}}
+\define@key{ooindex}{)}[]{\def\mode{close}}
+\define@key{ooindex}{style}{\def\style{#1}}
+\define@key{ooindex}{bf}[]{\def\style{textbf}}
+\define@key{ooindex}{it}[]{\def\style{textit}}
+\define@key{ooindex}{parent}{\edef\parent{#1}}
+\define@key{ooindex}     {p}{\edef\parent{#1}}
+
+%%%%%
+%% Data types
+
+\DECLARETYPE{IndexEntry}
+\PRESETS{IndexEntry}{
+  \F\MYword
+  \F\MYcategory
+  \FD\MYrefs{}
+  \FD\MYchildren{}
+  \def\@open{}
+  \def\@afterclose{}
+  \let\@toplevel\@true
+  \let\@haschildren\@false
+}
+
+\DECLARETYPE{IndexRef}
+\PRESETS{IndexRef}{
+  \F\MYid
+  \FD\MYclose{}
+  \FD\MYstyle{relax}
+}
+
+%%%%%
+%% Style area
+%%
+%% These are commands that would be redefined in alternate styles
+%%
+
+%% Specifies the textual title for the index
+\newcommand\@indname{Index}
+
+%%%%%
+%% Internal stuff
+%%
+%% This stuff might get used by custom index styles, but shouldn't
+%% be redefined
+
+\def\@true{\relax}
+\def\@false{\empty}
+
+\newinstance{IndexRef}{\@ref[2]}{%
+  \s\MYid{#1}
+  \s\MYstyle{\csname#2\endcsname}}
+\newinstance{IndexRef}{\@ocref[3]}{%
+  \s\MYid{#1}
+  \s\MYclose{#2}
+  \s\MYstyle{\csname#3\endcsname}}
+
+\def\@storedrefs{}
+\def\@addref#1#2#3{%
+  \expandafter\gdef\expandafter\@storedrefs\expandafter{\@storedrefs%
+                    \doref{#1}{#2}{#3}}}
+
+\def\@makeindexentry#1<#2#3>{
+  \edef\cat{\ifnum\lccode`#2>0#2\else?\fi}%
+  \edef\makeie{%
+    \ne\NEW{IndexEntry}{\unexpanded{#1}}{
+      \ne\s\ne\MYword{#2#3}
+      \ne\s\ne\MYcategory{\cat}
+    }}%
+  \makeie{}%
+}
+
+\def\@formatrefs#1{%
+  \forfirstmost{IndexRef}{\MYstyle{\pageref{@ooindex:\MYid}%
+                          \ifthenelse{\NOT\equal{\MYclose}{}
+                                      \AND\NOT\equal{\pageref{@ooindex:\MYid}}%
+                                                 {\pageref{@ooindex:\MYclose}}}%
+                                     {--\pageref{@ooindex:\MYclose}}{}}%
+                          \xdef\@lastpage{\noexpand\pageref{@ooindex:\MYid}}}
+                         {\ifthenelse{\equal{\pageref{@ooindex:\MYid}}%
+                                            {\@lastpage}}{}%
+                                     {, \MYstyle{\pageref{@ooindex:\MYid}}%
+                          \ifthenelse{\NOT\equal{\MYclose}{}
+                                      \AND\NOT\equal{\pageref{@ooindex:\MYid}}%
+                                                 {\pageref{@ooindex:\MYclose}}}%
+                              {\MYstyle{--\pageref{@ooindex:\MYclose}}}{}%
+                          \xdef\@lastpage{\noexpand\pageref{@ooindex:\MYid}}}}
+                         {#1}%
+}
+
+% Based on code from GameTeX by Ken Clary
+\newenvironment{@indlist}
+               {\list{}{%
+               \topsep0pt%
+  \partopsep\parskip%
+  \itemsep0pt%
+  \parsep0pt%
+  \parskip0pt%
+  \rightmargin0pt%
+  \parindent0pt%
+                \itemindent-\leftmargin%
+                \labelwidth0pt%
+                \let\makelabel\descriptionlabel}}
+               {\@topsepadd0pt\endlist}
+
+%% Counter for uniquifying index entry macros
+\newcount\@nextunique
+\@nextunique=1

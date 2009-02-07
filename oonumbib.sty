@@ -1,0 +1,26 @@
+%%%%%
+%%
+%% oonumbib.sty -- example oobib style file modeled after the unsrt BibTeX
+%%                 style
+%%%%%
+
+\def\@indval{\ref{@oobib:\MYindex}}
+\DeclareOption{paperorder}{\def\@indval{\MYindex}}
+
+\DeclareOption*{%
+  \PassOptionsToPackage{\CurrentOption}{oobib}%
+}
+
+\ProcessOptions
+
+\RequirePackage{oobib}
+
+\renewcommand\@pform[1]{%
+  [\@indval]}
+\renewcommand\@tform[1]{%
+  \@firstetal~[\@indval]}
+
+\renewcommand\@bibname{References}
+
+\renewcommand\@fronttag{%
+  [\@indval]\ }

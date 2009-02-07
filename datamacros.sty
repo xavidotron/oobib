@@ -1,0 +1,85 @@
+%% datamacros.sty -- macros based on datatypes by xavid
+\RequirePackage{datatypes}
+\RequirePackage{ifthen}
+
+%%%%% Generic datatypes-related commands
+
+%%%%% -- this command is from gametex.sty by Ken Clary
+%% \newinstance{<datatype>}{\command[<num>]}{<contents>}
+%%
+%% This creates a macro \command that takes <num> arguments and is a
+%% wrapper around \INSTANCE.  See datatypes.sty.
+\long\def\newinstance#1#2#3{\newcommand#2{\INSTANCE{#1}{#3}{}}}
+
+% This counter uniquifies our kludgy globals in ffmlon
+\newcount\@ffmloncounter
+\@ffmloncounter=0
+% This box hides spaces, etc in our list argument
+\newbox\@puntbox
+\def\@punt#1{\setbox\@puntbox=\hbox{#1}}
+
+%% \forfirstmostlastonenone{<datatype>}{<first>}{<most>}{<last>}{<one>}{<none>}{<list>}
+%% \forfirstmostlast{<datatype>}{<first>}{<most>}{<last>}{<list>}
+%% \forfirstmostone{<datatype>}{<first>}{<most>}{<one>}{<list>}
+%% \forfirstmost{<datatype>}{<first>}{<most>}{<list>}
+%%
+%% Replace the first object of type <datatype> in <list> by <first>,
+%% the last by <last>, and the rest by <most>.
+%%
+%% If there is only one, it is typeset as <one>.
+%% If there are none, <none> is typeset.
+%%
+%% <last> defaults to <most>, <one> defaults to <first>, and <none>
+%% defaults to \empty.
+\newcommand\forfirstmostlastonenone[7]{%
+  \edef\ourcount{\the\@ffmloncounter}%
+  \advance\@ffmloncounter by 1%
+  \def\outn{\csname @out\ourcount\endcsname}%
+  \def\setmid##1{\expandafter\gdef\csname @mid\ourcount\endcsname{##1}}%
+  \def\setout##1{\expandafter\gdef\csname @out\ourcount\endcsname{##1}}%
+  % sets mid to mid+it
+  \def\midpush##1{%
+    \expandafter\xdef\csname @mid\ourcount\endcsname{%
+      \expandafter\expandafter\expandafter\unexpanded\expandafter\expandafter\expandafter{\csname @mid\ourcount\endcsname}%
+      \unexpanded{##1}}}%
+  % sets out to mid+it
+  \def\outpush##1{%
+    \expandafter\xdef\csname @out\ourcount\endcsname{%
+      \expandafter\expandafter\expandafter\unexpanded\expandafter\expandafter\expandafter{\csname @mid\ourcount\endcsname}%
+      \unexpanded{##1}}}%
+  %
+  \def\first{#2}%
+  \def\most{#3}%
+  \def\last{#4}%
+  \def\one{#5}%
+  \def\none{#6}%
+  %
+  \setmid{}%
+  \setout{\none}%
+  %
+  % Mapping for first #1 in #7
+  \SURFACEMAP{#1}{%
+    % Use \expandafter to bind \ME to its current value
+    \expandafter\setout\expandafter{\ME{\one}}%
+    \expandafter\setmid\expandafter{\ME{\first}}%
+    \aftergroup\rest%
+  }%
+  \def\rest{%
+    % Mapping for the other #1s in #7
+    \CHANGESURFACEMAP{#1}{%
+      % Use \expandafter to bind \ME to its current value
+      \expandafter\outpush\expandafter{\ME{\last}}%
+      \expandafter\midpush\expandafter{\ME{\most}}%
+    }}%
+  \@punt{#7}%
+  \REMAP{#1}%
+  \outn%
+  }
+\newcommand\forfirstmostlast[5]{%
+  \forfirstmostlastonenone{#1}{#2}{#3}{#4}{#2}{}{#5}}
+\newcommand\forfirstmostlastone[6]{%
+  \forfirstmostlastonenone{#1}{#2}{#3}{#4}{#5}{}{#6}}
+\newcommand\forfirstmostone[5]{%
+  \forfirstmostlastonenone{#1}{#2}{#3}{#3}{#4}{}{#5}}
+\newcommand\forfirstmost[4]{%
+  \forfirstmostlastonenone{#1}{#2}{#3}{#3}{#2}{}{#4}}
