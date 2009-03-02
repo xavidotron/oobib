@@ -185,15 +185,23 @@
 \def\:ob{{\iffalse}\fi}
 \def\:cb{\iffalse{\fi}}
 
-\def\?{\futurelet\:nxt\:clear}
 \def\:clear{%
   \ifx\:nxt?\let\:nxt\:suckQ\else\let\:nxt\relax\fi\:nxt}
 \def\:suckQ#1{\?}
-\long\def\X#1{#1}
+
+\def\:norm:aft{%
+  \def\?{\futurelet\:nxt\:clear}%
+  \long\def\X##1{##1}%
+  }
+\def\:in:aft{%
+  \def\?{\?}%
+  \long\def\X{\X}%
+  }
+\:norm:aft
 
 \def\end:aft{\end:aft}%
 \def\end::aft{\end::aft}%
-\def\start:aft{\futurelet\:nxt\:aft}
+\def\start:aft{\:in:aft\futurelet\:nxt\:aft}
 \def\:aft{\let\:tmp\relax%
   \ifx\:nxt\:sptoken\def\:tmp{\:dospace}%
   \else\ifx\:nxt\bgroup\def\:tmp{\:dogrp}%
@@ -220,7 +228,7 @@
   \edef\:tmp{\:tmp}%
   \expandafter\:eqaf\expandafter{\:tmp}%
   \def\:tmp{}}
-\def\::doend#1{}%
+\def\::doend#1{\:norm:aft}%
 \def\:doquery#1{\futurelet\:nxt\::doquery}
 \def\::doquery{%
   \ifx\:nxt?\def\:nxt##1{\:toks\expandafter{\the\:toks\noexpand\?}\start:aft}%
@@ -1388,18 +1396,21 @@
 %%%%%
 %% formatting of error and warning messages
 \def\:mb{^^J\space\space}  %% linebreak in error/warning text
-\def\:typerr#1#2{\immediate\write18{%
+\def\:err{\errmessage{datatype error}}
+\def\:typerr#1#2{\immediate\write16{%
   ^^J! datatype \MYTYPESTRING\space error: #1%
   ^^J? #2%
-  ^^J!punting LaTeX!}\batchmode\@@end}
-\def\:typgenerr#1#2{\immediate\write18{%
+  ^^J!punting LaTeX!}%
+  \batchmode\@@end}
+\def\:typgenerr#1#2{\scrollmode\:err\immediate\write16{%
   ^^J! datatype error: #1%
   ^^J? #2%
-  ^^J!punting LaTeX!}\batchmode\@@end}
-\def\:typwarn#1{\immediate\write18{%
+  ^^J!punting LaTeX!}%
+  \batchmode\@@end}
+\def\:typwarn#1{\immediate\write16{%
   ^^J! datatype \MYTYPESTRING\space warning: #1%
   ^^J}}
-\def\:typgenwarn#1{\immediate\write18{%
+\def\:typgenwarn#1{\immediate\write16{%
   ^^J! datatype warning: #1%
   ^^J}}
 
