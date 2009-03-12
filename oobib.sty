@@ -73,7 +73,7 @@
 %% makes a bibligraphy of only the cited works, according to
 %% the various bibmappings
 \renewcommand\bibliography{
-  \section*{\@bibname{}}
+  \bibtitle{}
 
   % Catch the bibstuff
   \@bibstuff{}
@@ -127,11 +127,13 @@
   }
 \MAP{Name}{\MYname{}}
 
-%% \name{<name>}
+%% \bibname{<name>}
+%% \name{<name>} -- unless \name is already defined by another package
 %%
 %% creates a name inline, for people that show up only once.
-\newinstance{Name}{\name[1]}{%
+\newinstance{Name}{\bibname[1]}{%
   \s\MYname{#1}}
+\providecommand{\name}[1]{\bibname{#1}}
 
 %%%%%
 %% Source type -- parent of all source types
@@ -221,7 +223,7 @@
     #1\nolinebreak)}}
 
 %% Specifies the textual title for the bibliography
-\newcommand\@bibname{Bibliography}
+\newcommand\bibtitle{\section*{Bibliography}}
 
 %% Specifies a tag to go before each bibliography entry
 \newcommand\@fronttag{}
