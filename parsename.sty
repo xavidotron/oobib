@@ -1,3 +1,4 @@
+%% From GameTeX
 %% Copyright (c) Ken Clary and the MIT Assassins' Guild.
 
 %% You may use, copy, and/or modify this software for any purpose with or
@@ -164,11 +165,13 @@
   \let\*pvalrest\empty%
   \def\pre{\noexpand\pre}%
   \def\suf{\noexpand\suf}%
+  \def\*space{ }%
   \protected@edef\*pvalrest{#2}%  %%% LaTeX's \protect mechanism
   \ifx\*pvalrest\empty\relax\else%
     \ifx\*pvalrest\*pre\def\*pvalrest{}%
+    \else\ifx\*pvalrest\*space\def\*pvalrest{}%
     \else\expandafter\*parsepre\*pvalrest\*pmmark\pre\*pmark\*endparse%
-    \fi%
+    \fi\fi%
   \fi%
   \ifx\*pvalrest\empty\relax\else%
     \ifx\*pvalrest\*suff\def\*pvalrest{}%
