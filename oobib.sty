@@ -46,7 +46,7 @@
   \edef\sftemp{\the\spacefactor}%
   \@bibstuff{}% -! is there a way to get rid of this @bibstuff junk?
   \@pstart%
-  \forfirstmost{Source}{\@flagcited\@pform{#1}}{\@flagcited\@psep\@pform{#1}}{#2}%
+  \forfirstmost{Source}{\@flagcited\ME{\@pform{#1}}}{\@flagcited\@psep\ME{\@pform{#1}}}{#2}%
   \@pend%
   \spacefactor=\sftemp%
   \relax{}%
@@ -65,7 +65,7 @@
   \@bibstuff{}% -! is there a way to get rid of this @bibstuff junk?
   %\ME{\@tform{#1}}
   \@tstart%
-  \forfirstmostlast{Source}{\@flagcited\@tform{#1}}{\@flagcited\@tsep\@tform{#1}}{\@flagcited\@tand\@tform{#1}}{#2}%
+  \forfirstmostlast{Source}{\@flagcited\ME{\@tform{#1}}}{\@flagcited\@tsep\ME{\@tform{#1}}}{\@flagcited\@tand\ME{\@tform{#1}}}{#2}%
   \@tend{}%
   \@%
 }
@@ -156,11 +156,11 @@
   \def\@flagcited{%
     % Catch the bibstuff
     \@bibstuff{}%
+    \edef\MYindex{\the\@nextindex}%
     \ME{\if@cited\else%
-      \edef\idx{\the\@nextindex}%
       % This source is the \MYindex{}th source cited in the document
       \xdef\@bibstuff{\expandafter\unexpanded\expandafter{\@bibstuff}%
-        \expandafter\noexpand\ME{\noexpand\ADD{\noexpand\def\noexpand\MYindex{\idx}%
+        \expandafter\noexpand\ME{\noexpand\ADD{\noexpand\def\noexpand\MYindex{\MYindex}%
                       \noexpand\@citedtrue}}}%
       \global\advance\@nextindex by 1%
     \fi}%

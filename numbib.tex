@@ -1,6 +1,6 @@
 \documentclass{article}
 
-\usepackage[biborder]{oonumbib}
+\usepackage{oonumbib}
 
 \NEW{Book}{\cRainbow}{
   \s\MYauthors{\name{Bob Jones}%--figure out how to ignore this space???
@@ -57,10 +57,10 @@ z\@firstetal{\nName{}}\\
 z\@firstetal{\name{Rob Jones}\name{Joanie Miller}}\\
 z\@firstetal{\cRainbow{\MYauthors{}}}\\
 \makeatother
-z\cPutting{\citet{}}
+z\citet{\cPutting{}}
 
-\cRainbow{\citet[pg.\ 42]} wrote a book.~\cFish{}\\
-\cRainbow{\citet} wrote a book.~\cFish{\citep[pg. 42]}\\
+\citet[pg.\ 42]{\cRainbow{}} wrote a book.~\cFish{}\\
+\citet{\cRainbow{}} wrote a book.~\citep[pg. 42]{\cFish{}}\\
 
 \name{Bob Jones}\\
 \ifnotempty{Fish}{Fish isn't empty.}\\
@@ -68,10 +68,10 @@ z\cPutting{\citet{}}
 \ifnotempty{}{This should't print.}
 \cRainbow{\MYauthors}
 
-\cPutting{\Citet{} is used at the start of a sentence.~\Citep[pg. 42]}
+\Citet{\cPutting{}} is used at the start of a sentence.~\Citep[pg. 42]{\cPutting{}}
 
 \makeatletter
-\def\foo{\@Listnamesinvertfirst{\MYauthors}}
+\def\foo{\@Listnamesinvertfirstdot{\MYauthors}}
 \cRainbow{\foo}
 
 \@capitalize{fish}
