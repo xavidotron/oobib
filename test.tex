@@ -61,7 +61,7 @@ z\@firstetal{\name{Rob Jones}}  = zJones\\
 z\@firstetal{\name{Rob Jones}\name{Joanie Miller}}  = zJones et. al.\\
 z\@firstetal{\cRainbow{\MYauthors{}}} = zJones et. al.\\
 \makeatother
-z\cRainbow{\citet{}} = zJones et. al. (2002)
+z\citet{\cRainbow{}} = zJones et. al. (2002)
 
 
 \vskip\baselineskip
@@ -76,10 +76,10 @@ z\cRainbow{\citet{}} = zJones et. al. (2002)
 
 \vskip\baselineskip
 
-Books I have read include \forfirstmostlast{Source}{\emph{\MYtitle{}} (by \citet{})}{, \emph{\MYtitle{}}}{ and \emph{\MYtitle{}}}{\cRainbow{}\cNull{}\cFish{}}.
+Books I have read include \forfirstmostlast{Source}{\emph{\MYtitle{}} (by \@tform{})}{, \emph{\MYtitle{}}}{ and \emph{\MYtitle{}}}{\cRainbow{}\cNull{}\cFish{}}.
 
-\cRainbow{\citet[pg.\ 42]} wrote a book.~\cFish{}\\
-\cRainbow{\citet} wrote a book.~\cFish{\citep[pg. 42]}\\
+\citet[pg.\ 42]{\cRainbow{}} wrote a book.~\cFish{}\\
+\citet{\cRainbow{}} wrote a book.~\citep[pg. 42]{\cFish{}}\\
 
 \name{Bob Jones}\\
 \ifnotempty{Fish}{Fish isn't empty.}\\
@@ -87,7 +87,7 @@ Books I have read include \forfirstmostlast{Source}{\emph{\MYtitle{}} (by \citet
 \ifnotempty{}{This should't print.}
 \cRainbow{\MYauthors}
 
-\cPutting{\Citet{} is used at the start of a sentence.~\Citep[pg. 42]}
+\Citet{\cPutting{}} is used at the start of a sentence.~\Citep[pg. 42]{\cPutting{}}
 
 \makeatletter
 \def\foo{\@Listnamesinvertfirstdot{\MYauthors}}
@@ -98,7 +98,7 @@ Books I have read include \forfirstmostlast{Source}{\emph{\MYtitle{}} (by \citet
 
 \vskip\baselineskip
 \noindent
-This is a test of spacing.~\cFish{\citep} $|$There's space before this sentence.\\
+This is a test of spacing.\citep{\cFish{}} $|$There's space before this sentence.\\
 This is a test of spacing.\ (Abbot)\spacefactor=3000{} $|$There's equal space here.\\
 This is a test of spacing.\ (Abbot)\spacefactor=1000{} $|$There's less space before this
 one.\\

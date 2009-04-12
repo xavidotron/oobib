@@ -15,12 +15,20 @@
 
 \RequirePackage{oobib}
 
+\renewcommand\@pstart{~[}
+\renewcommand\@pend{]}
+\renewcommand\@psep{,}
 \renewcommand\@pform[1]{%
-  [\@indval]}
+  \@indval%
+}
+\renewcommand\@tstart{[}
+\renewcommand\@tend{]}
+\renewcommand\@tsep{,}
 \renewcommand\@tform[1]{%
-  \@firstetal~[\@indval]}
+  \@indval%
+}
 
-\renewcommand\@bibname{References}
+\renewcommand\bibtitle{\section*{References}}
 
 \renewcommand\@fronttag{%
   [\@indval]\ }

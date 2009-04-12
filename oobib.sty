@@ -35,23 +35,25 @@
 % the following should be valid:
 % \sBook{The book \emph{\MYtitle}, by \citet, was very useful.
 
-%% \sSource{\citep[<pages>]}
-%% \sSource{\Citep[<pages>]}
+%% \citep[<pages>]{\sSource{}\sOtherSource{}}
+%% \Citep[<pages>]{\sSource{}}
 %%
 %% Used in the context of a source, produces a parenthetical 
 %% citation, like "(Author, Year, Pages)" or "[12]"
 %% The \Citep version forces the first letter of the result to be capitalized.
 %% Includes an unbreakable space, so don't put a space between the last word and it.
-\newcommand\citep[1][]{%
+\newcommand\citep[2][]{%
   \edef\sftemp{\the\spacefactor}%
-  ~%
-  \@flagcited%
-    \@bibstuff{}% -! is there a way to get rid of this @bibstuff junk?
-  \ME{\@pform{#1}}%
-  \spacefactor=\sftemp}
-\newcommand\Citep[1][]{%
+  \@bibstuff{}% -! is there a way to get rid of this @bibstuff junk?
+  \@pstart%
+  \forfirstmost{Source}{\@flagcited\@pform{#1}}{\@flagcited\@psep\@pform{#1}}{#2}%
+  \@pend%
+  \spacefactor=\sftemp%
+  \relax{}%
+}
+\newcommand\Citep[2][]{%
   \let\@firstetal=\@Firstetal%
-  \citep[#1]}
+  \citep[#1]{#2}}
 
 %% \sSource{\citet[<pages>]}
 %% \sSource{\Citet[<pages>]}
@@ -59,13 +61,17 @@
 %% Used in the context of a source, produces an in-text citation, 
 %% like "Author (Year, Pages)" or "Author [12]"
 %% The \Citet version forces the first letter of the result to be capitalized.
-\newcommand\citet[1][]{%
-  \@flagcited%
-    \@bibstuff{}% -! is there a way to get rid of this @bibstuff junk?
-  \ME{\@tform{#1}}\@}
-\newcommand\Citet[1][]{%
+\newcommand\citet[2][]{%
+  \@bibstuff{}% -! is there a way to get rid of this @bibstuff junk?
+  %\ME{\@tform{#1}}
+  \@tstart%
+  \forfirstmostlast{Source}{\@flagcited\@tform{#1}}{\@flagcited\@tsep\@tform{#1}}{\@flagcited\@tand\@tform{#1}}{#2}%
+  \@tend{}%
+  \@%
+}
+\newcommand\Citet[2][]{%
   \let\@firstetal=\@Firstetal%
-  \citet[#1]}
+  \citet[#1]{#2}}
 
 %%%%%
 %% \bibliography{}
@@ -73,8 +79,6 @@
 %% makes a bibligraphy of only the cited works, according to
 %% the various bibmappings
 \renewcommand\bibliography{
-  \bibtitle{}
-
   % Catch the bibstuff
   \@bibstuff{}
 
@@ -104,9 +108,8 @@
     \fi
   }
   \begin{@biblist}
-  %\EVERY{Source}{\ifx\@cited\@true\item\label{@oobib:\MYindex}\MYbibmap{}\fi}
-  \SORT{Source}{alpha<}{\@sortorder}{\EVERY{Source}{}}%
-       {\if@cited\item\label{@oobib:\MYindex}\MYbibmap{}\fi}
+    \SORT{Source}{alpha<}{\@sortorder}{\EVERY{Source}{}}%
+         {\if@cited\item\label{@oobib:\MYindex}\MYbibmap{}\fi}
   \end{@biblist}
   }
 
@@ -127,13 +130,13 @@
   }
 \MAP{Name}{\MYname{}}
 
-%% \bibname{<name>}
+%% \ooname{<name>}
 %% \name{<name>} -- unless \name is already defined by another package
 %%
 %% creates a name inline, for people that show up only once.
-\newinstance{Name}{\bibname[1]}{%
+\newinstance{Name}{\ooname[1]}{%
   \s\MYname{#1}}
-\providecommand{\name}[1]{\bibname{#1}}
+\providecommand{\name}[1]{\ooname{#1}}
 
 %%%%%
 %% Source type -- parent of all source types
@@ -207,14 +210,21 @@
 %% \@pform{pages}
 %%
 %% Formats a parenthetical citation in the context of a source
+\newcommand\@pstart{~(}
+\newcommand\@pend{)}
+\newcommand\@psep{;\ }
 \newcommand\@pform[1]{%
-  (\nolinebreak\ifnotemptyelse{\MYauthors}{\@firstetal{\MYauthors}}{``\MYtitle''}%
+  \nolinebreak\ifnotemptyelse{\MYauthors}{\@firstetal{\MYauthors}}{``\MYtitle''}%
   \ifnotempty{\MYyear}{, \MYyear}%
   \ifnotempty{#1}{, #1}%
-  \nolinebreak)}
+  \nolinebreak}
 %% \@tform{pages}
 %%
 %% Formats an in-text citation in the context of a source
+\newcommand\@tstart{}
+\newcommand\@tend{}
+\newcommand\@tsep{, }
+\newcommand\@tand{, and }
 \newcommand\@tform[1]{%
   \@firstetal{\MYauthors}%
   \ifthenelse{\equal{\MYyear}{}\AND\equal{#1}{}}{}{%
