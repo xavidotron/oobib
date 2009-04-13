@@ -44,18 +44,17 @@
 %% Includes an unbreakable space, so don't put a space between the last word and it.
 \newcommand\citep[2][]{%
   \edef\sftemp{\the\spacefactor}%
-  \@bibstuff{}% -! is there a way to get rid of this @bibstuff junk?
-  \@pstart%
+  \@pstart\nolinebreak%
   {%
     \SURFACEMAP{Source}{\@flagcited}%
     #2%
     \REMAP{Source}%
   }%
-  \edef\fish{\unexpanded{#2}}%
-  %\edef\fish{\unexpanded{\SORT{Source}}\noexpand{\expandafter\noexpand\@porder\noexpand}%
-  %  \unexpanded{{\MYindex{}}{#2}{}}}%
+  \@bibstuff{}%
+  % Should be num<, but that breaks something
+  \def\fish{\SORT{Source}{alpha<}{\ref{@oobib:\MYindex}}{#2}{}}%
   \forfirstmost{Source}{\@pform{#1}}{\@psep\@pform{#1}}{\fish}%
-  \@pend%
+  \nolinebreak\@pend%
   \spacefactor=\sftemp%
   \relax{}%
 }
@@ -170,11 +169,11 @@
   \def\@flagcited{%
     % Catch the bibstuff
     \@bibstuff{}%
-    \edef\MYindex{\the\@nextindex}%
     \ME{\if@cited\else%
+      \edef\@myind{\the\@nextindex}%
       % This source is the \MYindex{}th source cited in the document
       \xdef\@bibstuff{\expandafter\unexpanded\expandafter{\@bibstuff}%
-        \expandafter\noexpand\ME{\noexpand\ADD{\noexpand\def\noexpand\MYindex{\MYindex}%
+        \expandafter\noexpand\ME{\noexpand\ADD{\noexpand\def\noexpand\MYindex{\@myind}%
                       \noexpand\@citedtrue}}}%
       \global\advance\@nextindex by 1%
     \fi}%
