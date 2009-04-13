@@ -5,7 +5,7 @@
 %%%%%
 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{oobib}[2007/10/06 v1.0a Object-Oriented Bibliography System]
+\ProvidesPackage{oobib}[2009/04/13 v1.0.1 Object-Oriented Bibliography System]
 \RequirePackage{datatypes}
 \RequirePackage{datamacros}
 \RequirePackage{parsename}
@@ -30,10 +30,10 @@
 %
 % These commands make up the public interface of oobib.
 %
-% "Used in the context of a source" means used like \sSource{\citep}.
-% You can put other stuff in the context of a source, for example,
+% "Used in the context of a source" means used like \sSource{\MYtitle}.
+% You can get attrs in the context of a source, for example,
 % the following should be valid:
-% \sBook{The book \emph{\MYtitle}, by \citet, was very useful.
+% \sBook{The book \emph{\MYtitle} was very useful.
 
 %% \citep[<pages>]{\sSource{}\sOtherSource{}}
 %% \Citep[<pages>]{\sSource{}}
@@ -46,7 +46,15 @@
   \edef\sftemp{\the\spacefactor}%
   \@bibstuff{}% -! is there a way to get rid of this @bibstuff junk?
   \@pstart%
-  \forfirstmost{Source}{\@flagcited\ME{\@pform{#1}}}{\@flagcited\@psep\ME{\@pform{#1}}}{#2}%
+  {%
+    \SURFACEMAP{Source}{\@flagcited}%
+    #2%
+    \REMAP{Source}%
+  }%
+  \edef\fish{\unexpanded{#2}}%
+  %\edef\fish{\unexpanded{\SORT{Source}}\noexpand{\expandafter\noexpand\@porder\noexpand}%
+  %  \unexpanded{{\MYindex{}}{#2}{}}}%
+  \forfirstmost{Source}{\@pform{#1}}{\@psep\@pform{#1}}{\fish}%
   \@pend%
   \spacefactor=\sftemp%
   \relax{}%
@@ -79,6 +87,8 @@
 %% makes a bibligraphy of only the cited works, according to
 %% the various bibmappings
 \renewcommand\bibliography{
+  \bibtitle{}
+
   % Catch the bibstuff
   \@bibstuff{}
 
@@ -137,6 +147,10 @@
 \newinstance{Name}{\ooname[1]}{%
   \s\MYname{#1}}
 \providecommand{\name}[1]{\ooname{#1}}
+%% \editor{<name>}
+%% 
+%% creates a name that's specifically an editor as opposed to an author
+\providecommand{\editor}[1]{\ooname{#1, Ed.}}
 
 %%%%%
 %% Source type -- parent of all source types
@@ -210,6 +224,7 @@
 %% \@pform{pages}
 %%
 %% Formats a parenthetical citation in the context of a source
+\newcommand\@porder{alpha<}
 \newcommand\@pstart{~(}
 \newcommand\@pend{)}
 \newcommand\@psep{;\ }
@@ -394,10 +409,18 @@
   }
 % ?xavid: why are these nolinebreaks necessary?
 \newcommand\@Listnamesinvertfirstdot[1]{%
-  \forfirstmostlastone{Name}{\@Lastfirst}{, \MYname{}\nolinebreak}{\ and \MYname{}\@.}
-      {\@Lastfirst\edef\stuff{\noexpand\in@{.<<}{\@lastfirst<<}}%
-       \stuff% Make us get wide spacing if applicable, even if we were a Q.
-       \ifin@\spacefactor=\sfcode`.\else\@.\fi}{#1}%
+  \forfirstmostlastone{Name}{\@Lastfirst}{, \MYname{}\nolinebreak}%
+                      {\ and \MYname{}%
+                        \edef\stuff{\noexpand\in@{.<<}{\MYname<<}}%
+                        \stuff%
+                        \ifin@\spacefactor=\sfcode`.\else\@.\fi}%
+                      {\@Lastfirst%
+                        % Make us get wide spacing if applicable, 
+                        % even if we were a Q.
+                        \edef\stuff{\noexpand\in@{.<<}{\@lastfirst<<}}%
+                        \stuff%
+                        \ifin@\spacefactor=\sfcode`.\else\@.\fi}%
+                      {#1}%
   }
 \newcommand\@listnames[1]{%
   \forfirstmostlast{Name}{\MYname{}}{, \MYname{}\nolinebreak}{\ and \MYname{}}{#1}%

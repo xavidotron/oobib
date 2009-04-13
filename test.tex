@@ -75,8 +75,20 @@ z\citet{\cRainbow{}} = zJones et. al. (2002)
 \makeatother
 
 \vskip\baselineskip
+Expansion:
 
-Books I have read include \forfirstmostlast{Source}{\emph{\MYtitle{}} (by \@tform{})}{, \emph{\MYtitle{}}}{ and \emph{\MYtitle{}}}{\cRainbow{}\cNull{}\cFish{}}.
+\def\foo{1}
+\def\baz{\foo}
+\renewcommand\bar[3]{a#1a#2a#3a}
+\edef\fish{\unexpanded{\bar{Pine}}\noexpand{\expandafter\noexpand\baz\noexpand}\unexpanded{{\foo}}}
+\def\foo{2}
+\def\baz{11}
+\renewcommand\bar[3]{b#1b#2b#3b}
+\fish
+
+\vskip\baselineskip
+
+Books I have read include \forfirstmostlast{Source}{\emph{\MYtitle{}} (by \citet{\ME{}})}{, \emph{\MYtitle{}}}{ and \emph{\MYtitle{}}}{\cRainbow{}\cNull{}\cFish{}}.
 
 \citet[pg.\ 42]{\cRainbow{}} wrote a book.~\cFish{}\\
 \citet{\cRainbow{}} wrote a book.~\citep[pg. 42]{\cFish{}}\\
