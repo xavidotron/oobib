@@ -52,7 +52,7 @@
   }%
   \@bibstuff{}%
   % Should be num<, but that breaks something
-  \def\fish{\SORT{Source}{alpha<}{\ref{@oobib:\MYindex}}{#2}{}}%
+  \def\fish{\SORT{Source}{num<}{\@reforzero{@oobib:\MYindex}}{#2}{}}%
   \forfirstmost{Source}{\@pform{#1}}{\@psep\@pform{#1}}{\fish}%
   \nolinebreak\@pend%
   \spacefactor=\sftemp%
@@ -438,6 +438,16 @@
   \ifthenelse{\lengthtest{\the\@argl=0pt}}{#3}{#2}}
 \newcommand\ifempty[2]{\ifnotemptyelse{#1}{}{#2}}
 \newcommand\ifnotempty[2]{\ifnotemptyelse{#1}{#2}{}}
+
+\def\@zeroref#1#2#3{%
+  \ifx#1\relax
+    0%
+  \else
+    \expandafter#2#1%
+  \fi
+}
+\def\@reforzero#1{%
+  \expandafter\@zeroref\csname r@#1\endcsname\@firstoftwo{#1}}
 
 % Options override other stuff
 \ProcessOptions
