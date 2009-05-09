@@ -32,3 +32,9 @@
 
 \renewcommand\@fronttag{%
   [\@indval]\ }
+
+\renewcommand\@normalfront[1][\@quote]{%
+  \@fronttag%
+  \@Listnamesdot{\MYauthors}%
+  \ifnotempty{\MYtitle}{  #1{\MYtitle}\@.}%
+}

@@ -427,6 +427,18 @@
 \newcommand\@Listnames[1]{%
   \forfirstmostlast{Name}{\@ecapitalize{\MYname}}{, \MYname{}\nolinebreak}{\ and \MYname{}}{#1}%
   }
+\newcommand\@Listnamesdot[1]{%
+  \forfirstmostlastone{Name}{\@ecapitalize{\MYname}}{, \MYname{}\nolinebreak}%
+                   {\ and \MYname{}%
+                     \edef\stuff{\noexpand\in@{.<<}{\MYname<<}}%
+                     \stuff%
+                     \ifin@\spacefactor=\sfcode`.\else\@.\fi}%
+                   {\@ecapitalize{\MYname}%
+                     \edef\stuff{\noexpand\in@{.<<}{\MYname<<}}%
+                     \stuff%
+                     \ifin@\spacefactor=\sfcode`.\else\@.\fi}
+                   {#1}%
+  }
 
 %% Counter for citation indices
 \newcount\@nextindex
