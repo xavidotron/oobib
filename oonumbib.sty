@@ -17,15 +17,15 @@
 
 \renewcommand\@pstart{~[}
 \renewcommand\@pend{]}
-\renewcommand\@psep{,}
+\renewcommand\@psep{,\hskip0pt} % \hskip allows it to linebreak there
 \renewcommand\@pform[1]{%
-  \@indval%
+  \@indval\nobreak%
 }
 \renewcommand\@tstart{[}
 \renewcommand\@tend{]}
-\renewcommand\@tsep{,}
+\renewcommand\@tsep{,\hskip0pt}
 \renewcommand\@tform[1]{%
-  \@indval%
+  \@indval\nobreak%
 }
 
 \renewcommand\bibtitle{\section*{References}}
